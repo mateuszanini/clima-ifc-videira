@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- INCLUSÃO DE CSS -->
+    <!-- Materialize -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css">
+    <!-- FontAwesome 
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">-->
+    <script src="https://use.fontawesome.com/f3b1d6f13a.js"></script>
+    <!-- CSS próprio -->
+    <style>
+
+    </style>
+</head>
+
+<body>
+
+    <!-- Menu -->
+    <div class="navbar-fixed">
+        <nav>
+            <div class="container">
+                <div class="nav-wrapper">
+                    <a href="#" class="brand-logo"><i class="fa fa-sun-o" aria-hidden="true"></i> Clima - IFC Videira</a>
+                    <ul id="nav-mobile" class="right hide-on-med-and-down">
+                        <li><a href="#modalDados" class="modal-trigger"><i class="fa fa-database" aria-hidden="true"></i> Dados</a></li>
+                        <li><a href="http://clima.videira.ifc.edu.br/estatisticas/image/downld02.txt" target="_blank"><i class="fa fa-share" aria-hidden="true"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Modal -->
+    <div id="modalDados" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <table class="highlight centered">
+                <thead>
+                    <tr>
+                        <th data-field="id">Data</th>
+                        <th data-field="name">Hora</th>
+                        <th data-field="price">Temperatura (ºC)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaDados">
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="modal-action modal-close waves-effect btn-flat">Fechar</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col s8">
+                <div class="row">
+                    <div class="col s12">
+                        <div class="card-panel center-align">
+                            <div id="grafico">
+
+                                <div class="preloader-wrapper active">
+                                    <div class="spinner-layer spinner-red-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col s4">
+                <div class="row">
+                    <div class="center-align" id="medias">
+                        <br>
+                        <div class="preloader-wrapper active">
+                            <div class="spinner-layer spinner-red-only">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                  <ul class="collapsible" data-collapsible="accordion">
+                    <li>
+                      <div class="collapsible-header"><i class="fa fa-info-circle" aria-hidden="true"></i> Legenda</div>
+                      <div class="collapsible-body"><span>
+                      <p>Madrugada (00:00h as 06:00h)</p>
+                      <p>Manhã (06:01h as 13:00h)</p>
+                      <p>Tarde (13:01h as 18:00h)</p>
+                      <p>Noite (18:01h as 23:59h)</p>
+                      </span></div>
+                    </li>              
+                  </ul>                    
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <!-- INCLUSÃO DE JAVASCRIPT -->
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <!-- Materialize -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Google Charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <!-- JS próprio -->
+    <script>
+        $(document).ready(function() {
+            $('.modal').modal();
+            $('.collapsible').collapsible();            
+        });
+
+        function validaData(data) {
+            var patternData1 = /^[0-9]{2}\/[0-9]{2}\/[0-9]{2}$/;
+            var patternData2 = /^[0-9]{1}\/[0-9]{2}\/[0-9]{2}$/;
+
+            if (!patternData1.test(data) && !patternData2.test(data)) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+
+        function arredonda(valor) {
+            return (valor).toFixed(2);
+        }
+
+        //requisição para o app script
+        google.script.run.withSuccessHandler(sucesso).withFailureHandler(erro).myFunction();
+
+        var m = [{
+            'data': null,
+            'media': 0.00,
+            'minima': 50.0,
+            'horaMinima': null,
+            'maxima': 0.00,
+            'horaMaxima': null,
+            'madrugada': 0.00,
+            'manha': 0.00,
+            'tarde': 0.00,
+            'noite': 0.00,
+        }];
+        var dia = 0;
+        var qtd = 0;
+        var qtdMadrugada = 0;
+        var qtdManha = 0;
+        var qtdTarde = 0;
+        var qtdNoite = 0;
+
+
+        function sucesso(response) {
+            // \s - qualquer espaço em branco
+            // {2,} - em quantidade de dois ou mais
+            // g - apanhar todas as ocorrências, não só a primeira
+            // depois o replace faz a subsituição desses grupos de espaços pelo que fôr passado no segundo parâmetro. Neste caso ; , ';');
+            var retorno = response.replace(/\s{2,}/g, ';');
+
+            var dados = retorno.split(";");
+
+            for (var i = 0; i < dados.length; i++) {
+                if (validaData(dados[i])) {
+                    var dataAtual = dados[i];
+                    break;
+                }
+            }
+
+            for (var i = 0; i < dados.length; i++) {
+
+                if (validaData(dados[i])) {
+                    var data = dados[i];
+                    var hora = dados[i + 1];
+                    var temper = dados[i + 2];
+                    //console.log(i + " - Data: " + data + " - Hora: " + hora + " - Temperatura: " + temper);
+
+                    /* 00:00 as 06:00 madrugada
+                    06:01 as 13:00 manhã
+                    13:01 as 18:00 tarde
+                    18:01 as 23:59 noite */
+
+                    var horaConvertida = hora.replace(":", "");
+
+                    if (data == dataAtual) {
+                        m[dia].data = data;
+                        m[dia].media = m[dia].media + parseFloat(temper);
+                        qtd++;
+
+                        //MADRUGADA
+                        if (horaConvertida >= 0 && horaConvertida <= 600) {
+                            m[dia].madrugada = m[dia].madrugada + parseFloat(temper);
+                            qtdMadrugada++;
+                        }
+                        else
+                        //MANHA
+                        if (horaConvertida > 600 && horaConvertida <= 1300) {
+                            m[dia].manha = m[dia].manha + parseFloat(temper);
+                            qtdManha++;
+                        }
+                        else
+                        //TARDE
+                        if (horaConvertida > 1300 && horaConvertida <= 1800) {
+                            m[dia].tarde = m[dia].tarde + parseFloat(temper);
+                            qtdTarde++;
+                        }
+                        else
+                        //NOITE
+                        if (horaConvertida > 1800 && horaConvertida <= 2359) {
+                            m[dia].noite = m[dia].noite + parseFloat(temper);
+                            qtdNoite++;
+                        }
+                        
+                        //MIN e MAX
+                        if(parseFloat(temper) < m[dia].minima){
+                          m[dia].minima = parseFloat(temper);
+                          m[dia].horaMinima = hora;
+                        }
+                        if(parseFloat(temper) > m[dia].maxima){
+                          m[dia].maxima = parseFloat(temper);
+                          m[dia].horaMaxima = hora;
+                        }
+
+                    }
+                    else {
+                        m[dia].media = parseFloat(arredonda(m[dia].media / qtd));
+                        m[dia].madrugada = parseFloat(arredonda(m[dia].madrugada / qtdMadrugada));
+                        m[dia].manha = parseFloat(arredonda(m[dia].manha / qtdManha));
+                        m[dia].tarde = parseFloat(arredonda(m[dia].tarde / qtdTarde));
+                        m[dia].noite = parseFloat(arredonda(m[dia].noite / qtdNoite));
+
+                        qtd = 0;
+                        qtdMadrugada = 0;
+                        qtdManha = 0;
+                        qtdTarde = 0;
+                        qtdNoite = 0;
+
+                        dia++;
+                        dataAtual = data;
+
+                        m.push({
+                            'data': null,
+                            'media': 0.00,
+                            'minima': 50.0,
+                            'horaMinima': null,
+                            'maxima': 0.00,
+                            'horaMaxima': null,
+                            'madrugada': 0.00,
+                            'manha': 0.00,
+                            'tarde': 0.00,
+                            'noite': 0.00,
+                        });
+
+                        m[dia].data = data;
+                        m[dia].media = m[dia].media + parseFloat(temper);
+                        qtd++;
+                        m[dia].madrugada = m[dia].madrugada + parseFloat(temper);
+                        qtdMadrugada++;
+                        
+                        //MIN e MAX
+                        if(parseFloat(temper) < m[dia].minima){
+                          m[dia].minima = parseFloat(temper);
+                          m[dia].horaMinima = hora;
+                        }
+                        if(parseFloat(temper) > m[dia].maxima){
+                          m[dia].maxima = parseFloat(temper);
+                          m[dia].horaMaxima = hora;
+                        }
+                    }
+
+                    var strTable = '<tr>' +
+                        '<td>' + data + '</td>' +
+                        '<td>' + hora + '</td>' +
+                        '<td>' + temper + '</td>' +
+                        '</tr>';
+                    $('#tabelaDados').append(strTable);
+                }
+
+
+            }
+            m[dia].media = parseFloat(arredonda(m[dia].media / qtd));
+            m[dia].madrugada = parseFloat(arredonda(m[dia].madrugada / qtdMadrugada));
+            m[dia].manha = parseFloat(arredonda(m[dia].manha / qtdManha));
+            m[dia].tarde = parseFloat(arredonda(m[dia].tarde / qtdTarde));
+            m[dia].noite = parseFloat(arredonda(m[dia].noite / qtdNoite));
+            console.log(m);
+            
+            Materialize.toast('Dados atualizados!', 2500);
+            //desenha o gráfico
+            drawChart();
+            $('.tooltipped').tooltip({delay: 50});
+
+        }
+
+        function erro(erro) {
+            alert("Algo de errado não está certo! " + erro);
+        }
+
+        // Load the Visualization API and the corechart package.
+        google.charts.load('current', {
+            'packages': ['corechart']
+        });
+        // Set a callback to run when the Google Visualization API is loaded.
+        //google.charts.setOnLoadCallback(drawChart);
+        // Callback that creates and populates a data table,
+        // instantiates the pie chart, passes in the data and
+        // draws it.
+
+        function drawChart() {
+            var strMedias = '';
+            // Create the data table.
+            var dataGrafico = new google.visualization.DataTable();
+            dataGrafico.addColumn('string', 'Data');
+            dataGrafico.addColumn('number', 'Temperatura (ºC)');
+            for (var i = 0; i < m.length; i++) {
+                //strMedias += '<div class="card-panel hoverable">' + m[i].data + ' &#8594; ' + m[i].media + ' ºC</div>';
+                strMedias += '<div class="card-panel center-align">' +
+                    '<div class="row">' +
+                      '<div class="chip">' +
+                        '<i class="fa fa-calendar" aria-hidden="true"></i> ' + m[i].data +
+                      '</div>' +
+                    '</div>' +
+                    '<p class="grey-text text-darken-1"><i class="fa fa-thermometer-half" aria-hidden="true"></i> Média &#8594; ' + m[i].media + ' ºC</p>' +
+                    '<p class="blue-text text-darken-4 tooltipped" data-position="right" data-tooltip="' + m[i].data + ' &#8594; ' + m[i].horaMinima + 'h"><i class="fa fa-snowflake-o" aria-hidden="true"></i> Mínima &#8594; ' + m[i].minima + ' ºC</p>' +
+                    '<p class="orange-text text-deep tooltipped" data-position="right" data-tooltip="' + m[i].data + ' &#8594; ' + m[i].horaMaxima + 'h"><i class="fa fa-sun-o" aria-hidden="true"></i> Máxima &#8594; ' + m[i].maxima + ' ºC</p>' +
+                '</div>';
+                dataGrafico.addRows([
+                    [m[i].data + ' (Madrugada)', m[i].madrugada],
+                    [m[i].data + ' (Manhã)', m[i].manha],
+                    [m[i].data + ' (Tarde)', m[i].tarde],
+                    [m[i].data + ' (Noite)', m[i].noite]
+                ]);
+            }
+            $("#medias").html(strMedias);
+            // Set chart options
+            var options = {
+                'title': 'Média de temperaturas (' + m[0].data + ' até ' + m[m.length - 1].data + ')',
+                'width': 550,
+                'height': 400
+            };
+            // Instantiate and draw our chart, passing in some options.
+            var chart = new google.visualization.ColumnChart(document.getElementById('grafico'));
+            chart.draw(dataGrafico, options);
+        }
+    </script>
+</body>
+
+</html>
